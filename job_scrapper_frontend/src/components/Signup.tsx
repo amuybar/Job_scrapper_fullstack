@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Signup.scss';
+import Spinner from './Spinner';
 
 function Signup() {
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -10,19 +13,32 @@ function Signup() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignup = async (event: { preventDefault: () => void; }) => {
+  const handleSignup = async (event: { preventDefault: () => void }) => {
     event.preventDefault();
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-
+    setIsLoading(true);
     try {
-    await axios.post(' http://127.0.0.1:8000/api/signup/', { username, email, password });
-
-    } catch (error) {
-      setError('Failed to create account');
+      const response = await axios.post('http://127.0.0.1:8000/api/signup/', {
+        username,
+        email,
+        password,
+      });
+      // Handle successful signup
+      console.log(response.data);
+      navigate('/dashboard'); // Navigate to the dashboard after successful signup
+    } catch (error: any) {
+      if (error.response && error.response.data && error.response.data.error) {
+        setError(error.response.data.error);
+      } else {
+        setError('Failed to create account');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -81,11 +97,17 @@ function Signup() {
           </button>
         </label>
         <br />
-        <button type="submit">Sign Up</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? <Spinner size={24} /> : 'Sign Up'}
+        </button>
+        <h3 onClick={() => navigate('/login')}>
+          Already have an account?
+        </h3>
       </form>
       <div className="signup-options">
-        <button className="signup-option">Sign up with Google</button>
-        <button className="signup-option">Sign up with Facebook</button>
+        <button className="signup-option">Google</button>
+        <button className="signup-option">Facebook</button>
+        
       </div>
     </div>
   );

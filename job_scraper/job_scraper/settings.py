@@ -130,8 +130,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_ALL_ORIGINS = True  # Allow requests from all origins, change in production
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,  # Adjust the page size as needed
+    'PAGE_SIZE': 10, 
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+         'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
 }
+AUTHENTICATION_BACKENDS = [
+    'rest_framework_simplejwt.authentication.JWTAuthentication',
+    # Other authentication backends...
+]
 
 # CHANNEL
 CHANNEL_LAYERS = {

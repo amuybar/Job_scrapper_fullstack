@@ -9,6 +9,7 @@ import SearchBar from './SearchBar';
 import Pagination from './Pagination';
 import Modal from './Modal';
 import LogSection from './LogSection';
+import Spinner from './Spinner';
 
 
 interface JobData {
@@ -56,12 +57,6 @@ const JobScraper: React.FC = () => {
     setIsLoggedIn(false);
     navigate('/login', { replace: true }); 
   }
-
-
-
-
-
-
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -162,7 +157,7 @@ const JobScraper: React.FC = () => {
     <div className="top">
       <h1>Job Listings</h1>
       {
-        isLoggedIn? (
+        !isLoggedIn? (
           <div className="auth">
           <button onClick={() => navigate('/dashboard')}>DashBoard</button>
           <button onClick={handleLogOut}>Logout</button>
@@ -178,20 +173,27 @@ const JobScraper: React.FC = () => {
  
       <SearchBar searchTerm={searchTerm} handleSearch={handleSearch} />
       <button onClick={handleScrapeJobs} disabled={isScraping}>
-        {isScraping ? 'Scraping...' : 'Scrape Jobs'}
-      </button>
-      {showlogDiv && logs.length > 0 && <LogSection logs={logs} showlogDiv={showlogDiv} setShowlogDiv={setShowlogDiv} />}
+  {isScraping ? <Spinner /> : 'Scrape Jobs'}
+</button>
+      {showlogDiv && (
+  <LogSection
+    logs={logs}
+    showlogDiv={showlogDiv}
+    setShowlogDiv={setShowlogDiv}
+    isLoading={isScraping}
+  />
+)}
       {error && <p className="error">{error}</p>}
       <h1>All Available Jobs</h1>
       <div className="job-cards">
-        {isLoading ? (
-          <p>Loading jobs...</p>
-        ) : (
-          jobs.map(job => (
-            <JobCard key={job.id} job={job} handleApply={handleApply} />
-          ))
-        )}
-      </div>
+  {isLoading ? (
+    <Spinner />
+  ) : (
+    jobs.map((job) => (
+      <JobCard key={job.id} job={job} handleApply={handleApply} />
+    ))
+  )}
+</div>
       <Pagination totalPages={totalPages} currentPage={currentPage} handlePageChange={handlePageChange} />
       {isModalOpen && (
         <Modal

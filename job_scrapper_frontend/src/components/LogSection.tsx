@@ -1,25 +1,36 @@
 // src/components/LogSection.tsx
 
 import React from 'react';
+import Spinner from './Spinner';
 
 interface LogSectionProps {
   logs: string[];
   showlogDiv: boolean;
-  setShowlogDiv: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowlogDiv: (value: boolean) => void;
+  isLoading: boolean;
 }
 
-const LogSection: React.FC<LogSectionProps> = ({ logs, showlogDiv, setShowlogDiv }) => (
-  <div className="logs">
-    <button onClick={() => setShowlogDiv(!showlogDiv)}>
-      {showlogDiv ? 'Hide Logs' : 'Show Logs'}
-    </button>
-    <h2>Active Logs</h2>
-    <div className="log-messages">
-      {logs.map((log, index) => (
-        <p key={index}>{log}</p>
-      ))}
+const LogSection: React.FC<LogSectionProps> = ({
+  logs,
+  showlogDiv,
+  setShowlogDiv,
+  isLoading,
+}) => {
+  return (
+    <div className="log-section">
+      <h3>Logs</h3>
+      {isLoading ? (
+        <Spinner />
+      ) : (
+        <div className="logs">
+          {logs.map((log, index) => (
+            <p key={index}>{log}</p>
+          ))}
+        </div>
+      )}
+      <button onClick={() => setShowlogDiv(false)}>Hide Logs</button>
     </div>
-  </div>
-);
+  );
+};
 
 export default LogSection;

@@ -1,40 +1,80 @@
 // src/components/Dashboard.tsx
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Link } from 'react-router-dom';
 import '../styles/Dashboard.scss';
+import { apiClient } from '../service/auth';
 
 const Dashboard: React.FC = () => {
-  const [appliedJobsCount, setAppliedJobsCount] = useState<number>(0);
-  const [userData, setUserData] = useState<any>(null); // Placeholder for user data
+  const [userData, setUserData] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+
+  const [profileData, setProfileData] = useState<any>({
+    full_name: '',
+    phone_number: '',
+    resume: null,
+    cover_letter: '',
+    linkedin_profile: '',
+    portfolio_website: '',
+  });
 
   useEffect(() => {
     const fetchUserData = async () => {
+      const token = localStorage.getItem('token');
+      console.log('Stored token:', token);
+  
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          // Token not found in local storage
-          throw new Error('Token not found');
-        }
-
-        const response = await axios.get(`http://127.0.0.1:8000/api/user/`, {
-          headers: {
-            Authorization: `Token ${token}`, 
-          },
-        });
-        console.log(response);
- 
+        const response = await apiClient.get('/user/');
+        console.log('Response:', response.data);
         setUserData(response.data);
-        // Assuming you have a field in user data that holds the count of applied jobs
-        setAppliedJobsCount(response.data.appliedJobsCount);
+  
+        const profileResponse = await apiClient.get('/profile/');
+        setProfileData(profileResponse.data);
+        setIsEditing(!profileResponse.data.resume); // Show form if no resume is uploaded
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
     };
-
     fetchUserData();
   }, []);
+  
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setProfileData({
+      ...profileData,
+      [name]: value,
+    });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, files } = e.target;
+    if (files) {
+      setProfileData({
+        ...profileData,
+        [name]: files[0],
+      });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData();
+    for (const key in profileData) {
+      formData.append(key, profileData[key]);
+    }
+
+    try {
+      const response = await apiClient.put('/profile/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log('Profile updated:', response.data);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
 
   return (
     <div className="dashboard">
@@ -43,9 +83,85 @@ const Dashboard: React.FC = () => {
         <p>Username: {userData?.username}</p>
         <p>Email: {userData?.email}</p>
       </div>
-      <div className="applied-jobs">
-        <h2>Total Applied Jobs: {appliedJobsCount}</h2>
-      </div>
+      {isEditing ? (
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="full_name">Full Name</label>
+            <input
+              type="text"
+              id="full_name"
+              name="full_name"
+              value={profileData.full_name}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="phone_number">Phone Number</label>
+            <input
+              type="text"
+              id="phone_number"
+              name="phone_number"
+              value={profileData.phone_number}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="resume">Resume</label>
+            <input
+              type="file"
+              id="resume"
+              name="resume"
+              onChange={handleFileChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="cover_letter">Cover Letter</label>
+            <textarea
+              id="cover_letter"
+              name="cover_letter"
+              value={profileData.cover_letter}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="linkedin_profile">LinkedIn Profile</label>
+            <input
+              type="url"
+              id="linkedin_profile"
+              name="linkedin_profile"
+              value={profileData.linkedin_profile}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="portfolio_website">Portfolio Website</label>
+            <input
+              type="url"
+              id="portfolio_website"
+              name="portfolio_website"
+              value={profileData.portfolio_website}
+              onChange={handleInputChange}
+            />
+          </div>
+          <button type="submit">Update Profile</button>
+          <button type="button" onClick={() => setIsEditing(false)}>Cancel</button>
+        </form>
+      ) : (
+        <div>
+          <h2>Your Profile</h2>
+          <div className="profile-info">
+            <p>Full Name: {profileData.full_name}</p>
+            <p>Phone Number: {profileData.phone_number}</p>
+            <p>LinkedIn Profile: <a href={profileData.linkedin_profile} target="_blank" rel="noopener noreferrer">{profileData.linkedin_profile}</a></p>
+            <p>Portfolio Website: <a href={profileData.portfolio_website} target="_blank" rel="noopener noreferrer">{profileData.portfolio_website}</a></p>
+            <p>Resume: <a href={profileData.resume} target="_blank" rel="noopener noreferrer">View Resume</a></p>
+          </div>
+          <button onClick={() => setIsEditing(true)}>Update Profile</button>
+        </div>
+      )}
       <div className="apply-button">
         <Link to="/apply" className="apply-link">
           Apply for Jobs
@@ -53,6 +169,7 @@ const Dashboard: React.FC = () => {
       </div>
     </div>
   );
+  
 };
 
 export default Dashboard;
