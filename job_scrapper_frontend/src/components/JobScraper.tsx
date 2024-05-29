@@ -11,7 +11,6 @@ import Modal from './Modal';
 import LogSection from './LogSection';
 import Spinner from './Spinner';
 
-
 interface JobData {
   id: number;
   title: string;
@@ -31,17 +30,17 @@ const JobScraper: React.FC = () => {
   const [isScraping, setIsScraping] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
-  const [showlogDiv, setShowlogDiv] = useState<boolean>(false);
+  const [showLogDiv, setShowLogDiv] = useState<boolean>(false);
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [cv, setCv] = useState<File | null>(null);
   const [coverLetter, setCoverLetter] = useState<string>('');
   const [name, setName] = useState<string>('');
 
-  const [isLoggedIn,setIsLoggedIn]=useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  // check if token and set islogged in
+  // Check if token and set isLoggedIn
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -51,12 +50,12 @@ const JobScraper: React.FC = () => {
     }
   }, []);
 
-  // logout
-  const handleLogOut=()=>{
+  // Logout
+  const handleLogOut = () => {
     localStorage.removeItem('token');
     setIsLoggedIn(false);
-    navigate('/login', { replace: true }); 
-  }
+    navigate('/login', { replace: true });
+  };
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -106,13 +105,13 @@ const JobScraper: React.FC = () => {
     try {
       setIsScraping(true);
       setIsLoading(true);
-      setShowlogDiv(true);
+      setShowLogDiv(true);
       setLogs(['Scraping jobs...']);
       await axios.post('http://127.0.0.1:8000/api/run-scraper/');
       setIsScraping(false);
       setIsLoading(false);
       setLogs((prevLogs) => [...prevLogs, 'Job scraping completed successfully.']);
-      setShowlogDiv(false);
+      setShowLogDiv(false);
     } catch (error) {
       console.error('Error scraping jobs:', error);
       setIsScraping(false);
@@ -156,45 +155,47 @@ const JobScraper: React.FC = () => {
   return (
     <div className="top">
       <h1>Job Listings</h1>
-      {
-        !isLoggedIn? (
-          <div className="auth">
-          <button onClick={() => navigate('/dashboard')}>DashBoard</button>
+      {isLoggedIn ? (
+        <div className="auth">
+          <button onClick={() => navigate('/dashboard')}>Dashboard</button>
           <button onClick={handleLogOut}>Logout</button>
         </div>
-        ) : (
-          <div className="auth">
-          <p>Join to have Specific jobs Automatically Applied for you every hour</p>
-          <button onClick={() => navigate('/login')}>LogIn</button>
-          <button onClick={() => navigate('/signup')}>SignUp</button>
+      ) : (
+        <div className="auth">
+          <p>Join to have specific jobs automatically applied for you every hour</p>
+          <button onClick={() => navigate('/login')}>Login</button>
+          <button onClick={() => navigate('/signup')}>Sign Up</button>
         </div>
-        )
-      }
- 
+      )}
+
       <SearchBar searchTerm={searchTerm} handleSearch={handleSearch} />
       <button onClick={handleScrapeJobs} disabled={isScraping}>
-  {isScraping ? <Spinner /> : 'Scrape Jobs'}
-</button>
-      {showlogDiv && (
-  <LogSection
-    logs={logs}
-    showlogDiv={showlogDiv}
-    setShowlogDiv={setShowlogDiv}
-    isLoading={isScraping}
-  />
-)}
+        {isScraping ? <Spinner /> : 'Scrape Jobs'}
+      </button>
+      {showLogDiv && (
+        <LogSection
+          logs={logs}
+          showlogDiv={showLogDiv}
+          setShowlogDiv={setShowLogDiv}
+          isLoading={isScraping}
+        />
+      )}
       {error && <p className="error">{error}</p>}
       <h1>All Available Jobs</h1>
       <div className="job-cards">
-  {isLoading ? (
-    <Spinner />
-  ) : (
-    jobs.map((job) => (
-      <JobCard key={job.id} job={job} handleApply={handleApply} />
-    ))
-  )}
-</div>
-      <Pagination totalPages={totalPages} currentPage={currentPage} handlePageChange={handlePageChange} />
+        {isLoading ? (
+          <Spinner />
+        ) : (
+          jobs.map((job) => (
+            <JobCard key={job.id} job={job} handleApply={handleApply} />
+          ))
+        )}
+      </div>
+      <Pagination
+        totalPages={totalPages}
+        currentPage={currentPage}
+        handlePageChange={handlePageChange}
+      />
       {isModalOpen && (
         <Modal
           isModalOpen={isModalOpen}

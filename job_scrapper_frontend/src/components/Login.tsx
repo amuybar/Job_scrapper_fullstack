@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import axios  from 'axios';
-import '../styles/Login.scss';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Spinner from './Spinner';
+import { login } from '../service/auth'; 
+import '../styles/Login.scss';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -17,13 +17,11 @@ function Login() {
     event.preventDefault();
     setIsLoading(true);
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/login/', {
-        username,
-        password,
-      });
-      const token = response.data.token;
+      // Call the login function from your auth service
+      const userData = await login(username, password);
+      const token = userData.access;
       localStorage.setItem('token', token);
-      console.table(token);
+      console.table(userData);
       navigate('/dashboard');
     } catch (error: any) {
       if (error.response && error.response.data && error.response.data.error) {
@@ -85,7 +83,6 @@ function Login() {
       <div className="login-options">
         <button className="login-option">Sign in with Google</button>
         <button className="login-option">Sign in with Facebook</button>
-        
       </div>
       <div className="login-footer">
         <a href="/forgot-password" className="forgot-password-link">
